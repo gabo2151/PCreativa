@@ -12,11 +12,13 @@ int FSR[5] = {A0, A1, A2, A3, A4};
 
 boolean play[5] = {true, true, true, true, true};
 boolean pres[5] = {false, false, false, false, false};
+boolean calibracion = true;
 
 int vFSR[5];
 int mapa[5];
 
 float hPa;
+float b_a, b_b;
 int vol;
 
 //-----------FIN DECLARACIONES---------------------------------
@@ -28,12 +30,22 @@ void setup() {
 
 // FUNCIONES :D
 // ------------------------------------------------------------
-void suena( int nota, int vol, int canal ){
-  MIDI.sendNoteOn( nota, vol, canal );
+void suena( int nota, int vol, int canal, bool oct ){
+  if (oct) {
+    MIDI.sendNoteOn( nota+12, vol, canal );
+  }
+  else {
+    MIDI.sendNoteOn( nota, vol, canal );
+  }
 }
 
-void para( int nota, int vol, int canal ){
-  MIDI.sendNoteOff( nota, vol, canal );
+void para( int nota, int vol, int canal, bool oct ){
+  if (oct) {
+    MIDI.sendNoteOn( nota+12, vol, canal );
+  }
+  else {
+    MIDI.sendNoteOn( nota, vol, canal );
+  }
 }
 
 //------------------------------------------------------------
@@ -53,63 +65,69 @@ void loop() {
   mapa[4] = map( vFSR[4], 0, 980, 0, 100 );
 
   hPa = sensor.pressure();
-  vol = map(hPa, 1010.0, 1045.0, 0, 127);
-  vol = 127;
+  if (calibracion){
+    MIDI.sendNoteOn(60, 100, 2);
+    delay(1500);
+    b_a = hPa - 2.0;
+    b_b = hPa + 35.0;
+    MIDI.sendNoteOff(60, 100, 2);
+    calibracion = false;
+  }
+  vol = map(hPa, b_a, b_b, 0, 127);
+  //vol = 127;
 
   // -------------------NOTAS PENTATONICAS----------------------
   int nota[8] = {60, 62, 64, 65, 67, 69, 71, 72};
   //--------------------FIN NOTAS-------------------------------
 
-  //----------------------------BOTON 1-5 ----------------------
-  for (int i=0; i<4; i++) { // Cambiar a 5 si es que se agrega el quinto boton
+  //----------------------------BOTON 1-4 ----------------------
+  for (int i=0; i<4; i++) {
     if ( mapa[i] > 10 ) {
       if ( play[i] ){
-        //suena( nota[i], vol, i+1 );
         pres[i] = true;
         play[i] = false;
       }
     }
     else {
-      //para ( nota[i], vol, i+1 );
       pres[i] = false;
       play[i] = true;
     }
   }
-  if ( hPa > 1000 ) {
+  if ( hPa > (b_a+2.0) ) {
     if      (  pres[0] && !pres[1] && !pres[2] ){
-      MIDI.sendNoteOn( nota[0], vol, 1 );
+      suena( nota[0], vol, 1, pres[3] );
     }
     else if ( !pres[0] &&  pres[1] && !pres[2] ){
-      MIDI.sendNoteOn( nota[1], vol, 1 );
+      suena( nota[1], vol, 1, pres[3] );
     }
     else if ( !pres[0] && !pres[1] &&  pres[2] ){
-      MIDI.sendNoteOn( nota[2], vol, 1 );
+      suena( nota[2], vol, 1, pres[3] );
     }
     else if (  pres[0] &&  pres[1] && !pres[2] ){
-      MIDI.sendNoteOn( nota[3], vol, 1 );
+      suena( nota[3], vol, 1, pres[3] );
     }
     else if (  pres[0] && !pres[1] &&  pres[2] ){
-      MIDI.sendNoteOn( nota[4], vol, 1 );
+      suena( nota[4], vol, 1, pres[3] );
     }
     else if ( !pres[0] &&  pres[1] &&  pres[2] ){
-      MIDI.sendNoteOn( nota[5], vol, 1 );
+      suena( nota[5], vol, 1, pres[3] );
     }
     else if (  pres[0] &&  pres[1] &&  pres[2] ){
-      MIDI.sendNoteOn( nota[6], vol, 1 );
+      suena( nota[6], vol, 1, pres[3] );
     }
     else {
-      MIDI.sendNoteOn( nota[7], vol, 1 );
+      suena( nota[7], vol, 1, pres[3] );
     }
   }
   else {
-    MIDI.sendNoteOff( nota[0], vol, 1);
-    MIDI.sendNoteOff( nota[1], vol, 1);
-    MIDI.sendNoteOff( nota[2], vol, 1);
-    MIDI.sendNoteOff( nota[3], vol, 1);
-    MIDI.sendNoteOff( nota[4], vol, 1);
-    MIDI.sendNoteOff( nota[5], vol, 1);
-    MIDI.sendNoteOff( nota[6], vol, 1);
-    MIDI.sendNoteOff( nota[7], vol, 1);
+    para( nota[0], vol, 1, pres[3]);
+    para( nota[1], vol, 1, pres[3]);
+    para( nota[2], vol, 1, pres[3]);
+    para( nota[3], vol, 1, pres[3]);
+    para( nota[4], vol, 1, pres[3]);
+    para( nota[5], vol, 1, pres[3]);
+    para( nota[6], vol, 1, pres[3]);
+    para( nota[7], vol, 1, pres[3]);
   }
   //----------------------------FIN-----------------------------
   delay(10);
