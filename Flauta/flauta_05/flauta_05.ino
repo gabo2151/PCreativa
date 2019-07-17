@@ -2,6 +2,7 @@
 #include <MIDI.h>
 #include <SPI.h>
 #include <MPL115A1.h>
+#define PRESSURE_5V 10
 
 MPL115A1 sensor;
 
@@ -27,6 +28,8 @@ int curr_note;
 //-----------FIN DECLARACIONES---------------------------------
 void setup() {
   MIDI.begin();
+  pinMode(PRESSURE_5V, OUTPUT);
+  digitalWrite(PRESSURE_5V, HIGH);
   Serial.begin(115200);
   sensor.begin();
   nt = -1;
@@ -34,17 +37,20 @@ void setup() {
 
 // FUNCIONES :D
 // ------------------------------------------------------------
-void suena( int nota, int vol, int canal){  
-  MIDI.sendNoteOn ( nota, vol, canal );
-}
+void suena();
+void para();
 
-
-void para( int nota, int vol, int canal){
-  MIDI.sendNoteOff( nota, vol, canal );
-}
-
-//------------------------------------------------------------
-//FIN FUNCIONES :D
+// -------------------NOTAS PENTATONICAS----------------------
+// 100 -> 1 <- Do  = 60
+// 010 -> 2 <- Re  = 62
+// 001 -> 4 <- Mi  = 64
+// 110 -> 3 <- Fa  = 65
+// 101 -> 5 <- Sol = 67
+// 011 -> 6 <- La  = 69
+// 111 -> 7 <- Si  = 71
+// 000 -> 0 <- Do. = 72
+int nota[16] = {72, 60, 62, 65, 64, 67, 69, 71, 84, 72, 74, 77, 76, 79, 81, 83};
+//--------------------FIN NOTAS-------------------------------
 
 void loop() {
   for (int i=0; i<5; i++){
@@ -67,18 +73,6 @@ void loop() {
     calibracion = false;
   }
   vol = map(hPa, b_a, b_b, 20, 127);
-
-  // -------------------NOTAS PENTATONICAS----------------------
-  // 100 -> 1 <- Do  = 60
-  // 010 -> 2 <- Re  = 62
-  // 001 -> 4 <- Mi  = 64
-  // 110 -> 3 <- Fa  = 65
-  // 101 -> 5 <- Sol = 67
-  // 011 -> 6 <- La  = 69
-  // 111 -> 7 <- Si  = 71
-  // 000 -> 0 <- Do. = 72
-  int nota[16] = {72, 60, 62, 65, 64, 67, 69, 71, 84, 72, 74, 77, 76, 79, 81, 83};
-  //--------------------FIN NOTAS-------------------------------
 
   //-------------------------- BOTONES -------------------------
   for (int i=0; i<4; i++) {
@@ -114,4 +108,13 @@ void loop() {
     }
   }
   //----------------------------FIN-----------------------------
+}
+
+void suena( int nota, int vol, int canal){  
+  MIDI.sendNoteOn ( nota, vol, canal );
+}
+
+
+void para( int nota, int vol, int canal){
+  MIDI.sendNoteOff( nota, vol, canal );
 }
