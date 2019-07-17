@@ -67,8 +67,8 @@ void loop() {
   if (calibracion){
     MIDI.sendNoteOn(60, 100, 2);
     delay(1500);
-    b_a = hPa + 2.0;
-    b_b = hPa + 30.0;
+    b_a = hPa + 1.5;
+    b_b = hPa + 15.0;
     MIDI.sendNoteOff(60, 100, 2);
     calibracion = false;
   }
@@ -76,7 +76,7 @@ void loop() {
 
   //-------------------------- BOTONES -------------------------
   for (int i=0; i<4; i++) {
-    if ( mapa[i] > 10 && hPa > (b_a)) {
+    if ( mapa[i] > 20 && hPa > (b_a)) {
         pres[i] = true;
     }
     else {
